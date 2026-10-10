@@ -1,0 +1,4 @@
+# PyTorch is installed first from the CPU index. See the README.
+# A plain pip install of torch would download the CUDA build, which this
+# project does not use.
+laya

@@ -1,0 +1,8 @@
+.venv
+.cache
+.git
+**/__pycache__
+**/*.py[cod]
+checkpoints/qrc/checkpoint_latest
+data
+*.md
