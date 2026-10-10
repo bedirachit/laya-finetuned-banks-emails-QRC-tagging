@@ -10,8 +10,8 @@ What this script does, in order:
 1. Read data/train.jsonl. Laya holds about 10 percent of those rows out and
    uses them only to fit a confidence temperature. Those rows are not trained on.
 2. Score data/test.jsonl with the untouched base model. That is the "before" accuracy.
-3. Train for 4 epochs. The 421M encoder stays frozen, so only the small decision
-   head changes. That is what makes a run possible on CPU.
+3. Train for 4 epochs. freeze_encoder is false, so the 421M encoder and the
+   decision head both change. The run is on CPU.
 4. Score the same test file again. That is the "after" accuracy. The test emails
    are never in the training file, so this number is not memorization of the
    training rows.
@@ -62,8 +62,7 @@ def config():
         # Laya's other option, "rlcd", adds a reinforcement term. On their
         # own benchmark that extra term did not raise accuracy.
         loss="soft-ce", 
-        # Freeze the pretrained encoder and train only the decision head.
-        # The encoder is 421M parameters. Updating it on this CPU is not practical.
+        # False updates the pretrained encoder as well as the decision head.
         freeze_encoder=False,
         # Held-out file. Laya scores it before training and again after.
         eval_data=str(TEST),
@@ -117,7 +116,7 @@ def main() -> None:
         device="cpu",
     )
     report = summary["train_report"]
-    # "before" is the base checkpoint. "after" is the head just trained.
+    # "before" is the base checkpoint. "after" is the checkpoint just trained.
     # Both numbers are on data/test.jsonl.
     print_eval("Before", report.get("before"))
     print_eval("After", report.get("after"))

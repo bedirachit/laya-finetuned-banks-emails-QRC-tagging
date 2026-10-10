@@ -1,18 +1,18 @@
 # Laya banking email QRC
 
-Classify a retail-bank customer email as a **query**, a **request**, or a **complaint**.
+Fine-tune [Laya](https://pypi.org/project/laya/) so it classifies a retail-bank customer email as a **query**, a **request**, or a **complaint**. Training starts from the English checkpoint `convaiinnovations/laya` and updates the encoder and the decision head.
 
-![A person losing patience with an email](https://media.giphy.com/media/QbicKdnpcCc6c1VITr/giphy.gif)
+A **query** only asks for information, such as a rate or a balance. A **request** asks the bank to do something and does not say anything went wrong. A **complaint** says the customer is unhappy about a charge, a payment, or the service. If they are unhappy and also ask for a fix, the label is still a complaint.
 
-*Per my last email.* That one is a complaint.
+*You charged the monthly fee twice. Please reverse it.* That is a complaint: the reversal is a request, but the customer is unhappy about the charge.
 
-The shared question lives in [`scripts/qrc.py`](scripts/qrc.py). Training and the API both use that wording. The words in `criteria` are part of the question: Laya scores the email against those descriptions.
+Those three descriptions are the question the fine-tuned model answers. They live in [`scripts/qrc.py`](scripts/qrc.py) under `criteria`. Training copies that text onto every row, and the API loads the fine-tuned checkpoint and uses the same object, so the model is always scored against the same words.
 
 ## About Laya
 
 [Laya](https://pypi.org/project/laya/) is an open decision model, System One category. It does not write a reply. You pass a state, here the customer email, and one or more typed questions. One forward pass returns a probability for every option.
 
-This project starts from the English checkpoint `convaiinnovations/laya`, a ModernBERT-large model of about 421 million parameters. Fine-tuning leaves that encoder frozen and trains only the small decision head.
+This project starts from the English checkpoint `convaiinnovations/laya`, a ModernBERT-large model of about 421 million parameters. Fine-tuning updates that encoder and the decision head. `freeze_encoder` is false in [`scripts/finetune_qrc.py`](scripts/finetune_qrc.py).
 
 Laya has three question types:
 
@@ -35,7 +35,7 @@ The QRC task is a `choice` question. The demo script also asks a `score` (urgenc
 | [`scripts/qrc.py`](scripts/qrc.py) | The QRC question used everywhere |
 | [`scripts/setup.py`](scripts/setup.py) | Installs CPU PyTorch and Laya into the active Python |
 | [`scripts/first_decision.py`](scripts/first_decision.py) | Scores one email in the terminal |
-| [`scripts/finetune_qrc.py`](scripts/finetune_qrc.py) | Trains the QRC decision head |
+| [`scripts/finetune_qrc.py`](scripts/finetune_qrc.py) | Fine-tunes the encoder and the QRC decision head |
 | [`service/main.py`](service/main.py) | HTTP API: email in, QRC tag and scores out |
 | `checkpoints/qrc` | Fine-tuned weights, written by the training script |
 
@@ -115,7 +115,7 @@ Each JSONL row is one email:
 
 ## Fine-tune
 
-[`scripts/finetune_qrc.py`](scripts/finetune_qrc.py) calls Laya's own training loop. The 421M encoder stays frozen. Only the decision head is updated, on CPU.
+[`scripts/finetune_qrc.py`](scripts/finetune_qrc.py) calls Laya's own training loop. `freeze_encoder` is false, so the 421M encoder and the decision head are both updated, on CPU.
 
 Laya holds about 10 percent of `data/train.jsonl` out and uses those rows only to fit a confidence temperature. It scores `data/test.jsonl` before training and again after. The test file is never used to update weights.
 
