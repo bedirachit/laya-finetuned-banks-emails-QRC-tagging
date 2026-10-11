@@ -2,6 +2,8 @@
 
 Fine-tune [Laya](https://pypi.org/project/laya/) so it classifies a retail-bank customer email as a **query**, a **request**, or a **complaint**. Training starts from the English checkpoint `convaiinnovations/laya` and updates the encoder and the decision head.
 
+![Fine-tuned Laya on a local CPU compared with Claude Haiku: comparable accuracy, about 400 ms versus 1.1 s, and the email stays on your infrastructure](Laya%20vs%20Claude_%20Faster%2C%20Private%20AI.png)
+
 A **query** only asks for information, such as a rate or a balance. A **request** asks the bank to do something and does not say anything went wrong. A **complaint** says the customer is unhappy about a charge, a payment, or the service. If they are unhappy and also ask for a fix, the label is still a complaint.
 
 *You charged the monthly fee twice. Please reverse it.* That is a complaint: the reversal is a request, but the customer is unhappy about the charge.
